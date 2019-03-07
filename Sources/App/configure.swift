@@ -29,8 +29,20 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     // register Redis provider
     try services.register(RedisProvider())
     
+    if env != .development {
+        print(env)
+        let hostname = Environment.get("REDIS_HOSTNAME") ?? ""
+        let database = Environment.get("REDIS_DATABASE") ?? ""
+        
+        let redisUrlString = "redis://\(hostname):6379/\(database)"
+        guard let redisUrl = URL(string: redisUrlString) else { throw Abort(.internalServerError) }
+        let redisClientConfig = RedisClientConfig(url: redisUrl)
+        
+        services.register(redisClientConfig, as: RedisClientConfig.self)
+    }
+    
     // Configure migrations
-    var migrations = MigrationConfig()
+//    var migrations = MigrationConfig()
 //    migrations.add(model: Todo.self, database: .sqlite)
 //    services.register(migrations)
 }

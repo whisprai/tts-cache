@@ -1,4 +1,5 @@
 import Vapor
+import Redis
 
 final class TodoController {
     
@@ -20,8 +21,11 @@ final class TodoController {
             .flatMap({ (googleResponse) -> (Future<[String : String]>) in
             try googleResponse.content.decode([String : String].self)
         })
+        var config = try req.make(RedisClientConfig.self)
+        print(config)
         
         return req.withNewConnection(to: .redis) { redis in
+            
             return redis.get(jsonBody, as: String.self)
                 .flatMap({ (cached) -> EventLoopFuture<VoiceResponse> in
                     if let cachedData = cached { return req.eventLoop.newSucceededFuture(result: VoiceResponse(data: cachedData, cached: true)) }
