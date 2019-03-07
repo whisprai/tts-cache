@@ -1,5 +1,6 @@
 import FluentSQLite
 import Vapor
+import Redis
 
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
@@ -24,9 +25,12 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     var databases = DatabasesConfig()
     databases.add(database: sqlite, as: .sqlite)
     services.register(databases)
-
+    
+    // register Redis provider
+    try services.register(RedisProvider())
+    
     // Configure migrations
     var migrations = MigrationConfig()
-    migrations.add(model: Todo.self, database: .sqlite)
-    services.register(migrations)
+//    migrations.add(model: Todo.self, database: .sqlite)
+//    services.register(migrations)
 }
