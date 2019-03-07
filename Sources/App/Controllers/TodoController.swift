@@ -1,7 +1,7 @@
 import Vapor
 import Redis
 
-final class TodoController {
+final class speechController {
     
     let ttsAPIUrl = "https://texttospeech.googleapis.com/v1beta1/text:synthesize"
     let headers = HTTPHeaders([
@@ -21,7 +21,7 @@ final class TodoController {
             .flatMap({ (googleResponse) -> (Future<[String : String]>) in
             try googleResponse.content.decode([String : String].self)
         })
-        var config = try req.make(RedisClientConfig.self)
+        let config = try req.make(RedisClientConfig.self)
         print(config)
         
         return req.withNewConnection(to: .redis) { redis in
