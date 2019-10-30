@@ -7,7 +7,6 @@
 
 import Foundation
 import Vapor
-import AVFoundation
 import Redis
 
 class ttsIBM: IttsProvider {
