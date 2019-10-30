@@ -46,12 +46,12 @@ struct TTSRequest : Content {
 }
 
 struct TTSRequestVoice : Content {
-    let name: String
+    let name: String?
     let languageCode: String
 }
 
 struct TTSRequestAudio :  Content {
-    let effectsProfileId: String
+    let effectsProfileId: [String]?
     let audioEncoding: String
 }
 
