@@ -25,7 +25,7 @@ final class speechController {
     
     private func hashFrom(_ ttsReq: TTSRequest) -> String {
         var combined = ttsReq.input.ssml+ttsReq.voice.name+ttsReq.voice.languageCode+ttsReq.audioConfig.effectsProfileId+ttsReq.audioConfig.audioEncoding
-        return combined.hashValue
+        return String(combined.hashValue)
     }
 }
 
