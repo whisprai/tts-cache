@@ -10,12 +10,12 @@ import Foundation
 
 class TTSProviderFactory  {
     
-    static func getTTSProvider(_ ttsRequest: TTSRequest) -> IttsProvider {
+    static func getTTSProvider(_ ttsRequest: TTSRequest) -> TTSProviderProtocol {
         switch (ttsRequest.voice.languageCode) {
             case "es":
-                return ttsIBM()
+                return TTSIBMProvider()
             default:
-                return ttsGoogle()
+                return TTSGoogleProvider()
         }
     }
     

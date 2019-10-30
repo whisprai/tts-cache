@@ -7,9 +7,10 @@
 
 import Foundation
 import Vapor
+import AVFoundation
 import Redis
 
-class ttsIBM: IttsProvider {
+class TTSIBMProvider: TTSProviderProtocol {
     
     let ttsAPIUrl = "https://stream.watsonplatform.net/text-to-speech/api/v1/synthesize?voice="
     let apiKey = "ndHUMUN-WDu872AfMmVa_vcQDidclpqQRUgi3rk-KZpu"

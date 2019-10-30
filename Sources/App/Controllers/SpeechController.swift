@@ -1,7 +1,7 @@
 import Vapor
 import Redis
 
-final class speechController {
+final class SpeechController {
     
    
     func speech(_ req: Request) throws -> Future<VoiceResponse> {

@@ -9,7 +9,7 @@ import Foundation
 import Vapor
 import Redis
 
-class ttsGoogle: IttsProvider {
+class TTSGoogleProvider: TTSProviderProtocol {
     
     let ttsAPIUrl = "https://texttospeech.googleapis.com/v1beta1/text:synthesize"
     let headers = HTTPHeaders([

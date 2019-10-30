@@ -9,6 +9,6 @@ public func routes(_ router: Router) throws {
     }
 
     // Example of configuring a controller
-    let todoController = speechController()
-    router.post("speech", use: todoController.speech)
+    let speechController = SpeechController()
+    router.post("speech", use: speechController.speech)
 }

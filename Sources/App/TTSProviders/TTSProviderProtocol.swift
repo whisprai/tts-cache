@@ -8,6 +8,6 @@
 import Foundation
 import Vapor
 
-protocol IttsProvider {
+protocol TTSProviderProtocol {
     func speech(_ ttsRequest: TTSRequest, _ req: Request) throws -> Future<String>
 }
