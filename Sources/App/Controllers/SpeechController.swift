@@ -24,7 +24,8 @@ final class SpeechController {
     }
     
     private func hashFrom(_ ttsReq: TTSRequest) -> String {
-        var combined = ttsReq.input.ssml+ttsReq.voice.name+ttsReq.voice.languageCode+ttsReq.audioConfig.effectsProfileId+ttsReq.audioConfig.audioEncoding
+        let effectsProfile = ttsReq.audioConfig.effectsProfileId.joined()
+        var combined = ttsReq.input.ssml+ttsReq.voice.name+ttsReq.voice.languageCode+effectsProfile+ttsReq.audioConfig.audioEncoding
         return String(combined.hashValue)
     }
 }
@@ -46,12 +47,12 @@ struct TTSRequest : Content {
 }
 
 struct TTSRequestVoice : Content {
-    let name: String?
+    let name: String
     let languageCode: String
 }
 
 struct TTSRequestAudio :  Content {
-    let effectsProfileId: [String]?
+    let effectsProfileId: [String]
     let audioEncoding: String
 }
 
