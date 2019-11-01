@@ -35,7 +35,12 @@ class TTSIBMProvider: TTSProviderProtocol {
         newHttp.method = HTTPMethod.POST;
         newHttp.url = URL(string:url)!
         newHttp.headers = headers
-        newHttp.body = HTTPBody(string: "{\"text\":\"\(ttsRequest.input.ssml)\"}")
+        
+        let body = ReqBody(text: ttsRequest.input.ssml)
+        let jsonData = try JSONEncoder().encode(body)
+        let jsonString = String(data: jsonData, encoding: .utf8)!
+        newHttp.body = HTTPBody(string: jsonString)
+        
         let newRequest = Request(http: newHttp, using: req.sharedContainer)
         
         return try req.client().send(newRequest)
@@ -48,9 +53,12 @@ class TTSIBMProvider: TTSProviderProtocol {
                 }
 
                 let data = response.http.body.data
-                
                 let base64 = data!.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
                 return req.future( base64 )
         })
+    }
+    
+    struct ReqBody: Codable {
+        let text: String
     }
 }
