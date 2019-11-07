@@ -17,16 +17,5 @@ class TTSProviderFactory  {
             default:
                 return TTSGoogleProvider()
         }
-    }
-    
-    static func getContentType(_ ttsRequest: TTSRequest) -> String {
-        switch (ttsRequest.audioConfig.audioEncoding) {
-            
-        case "WAV":
-            return "audio/wav"
-        default:
-            return "audio/mp3"
-        }
-    }
-    
+    }   
 }

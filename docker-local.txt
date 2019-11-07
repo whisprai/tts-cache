@@ -1,0 +1,2 @@
+docker run --rm -it -p 80:80 -e FIND_FFMPEG="true" -e BYPASS_CACHED="true" -e FFMPEG_PATH="/usr/bin/ffmpeg" -e IBM_API_KEY="ndHUMUN-WDu872AfMmVa_vcQDidclpqQRUgi3rk-KZpu" tts
+docker build -t tts -f web.Dockerfile ./

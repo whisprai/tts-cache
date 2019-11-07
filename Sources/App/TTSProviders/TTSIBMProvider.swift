@@ -11,14 +11,19 @@ import Redis
 
 class TTSIBMProvider: TTSProviderProtocol {
     
-    let ttsAPIUrl = "https://stream.watsonplatform.net/text-to-speech/api/v1/synthesize?voice="
-    let apiKey = "ndHUMUN-WDu872AfMmVa_vcQDidclpqQRUgi3rk-KZpu"
+    var ffmpegFilterString: String? = "acompressor=ratio=6:attack=0.03:release=25:threshold=-19dB:knee=6dB:makeup=8dB:mix=1:detection=peak,equalizer=f=2000:g=3.85dB:w=1.14,equalizer=f=700:g=7dB:w=0.7"
     
     let defaultVoice = "es-ES_EnriqueV3Voice"
     
+    let apiKey = Environment.get("IBM_API_KEY")!
+    
+    func getApiUrl (voiceName: String) -> String {
+        return "https://stream.watsonplatform.net/text-to-speech/api/v1/synthesize?voice=\(voiceName)"
+    }
+    
     func speech(_ ttsRequest: TTSRequest, _ req: Request) throws -> Future<String> {
         
-        let url = ttsAPIUrl + defaultVoice //ttsRequest.voice.name
+        let url = getApiUrl(voiceName: defaultVoice) //ttsRequest.voice.name
         
         let authData = ("apiKey:\(apiKey)").data(using: String.Encoding.utf8)
         let auth_b64 = authData!.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
@@ -26,7 +31,7 @@ class TTSIBMProvider: TTSProviderProtocol {
         let authValue = "Basic \(auth_b64)"
         
         let headers = HTTPHeaders([
-            ("Accept", TTSProviderFactory.getContentType(ttsRequest)),
+            ("Accept", "audio/mp3"),
             ("Content-Type", "application/json; charset=utf-8"),
             ("Authorization", authValue)
         ])

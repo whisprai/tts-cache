@@ -1,6 +1,8 @@
 import Vapor
 import Redis
 
+let BYPASS_CACHED = true
+
 final class SpeechController {
     
    
@@ -8,6 +10,19 @@ final class SpeechController {
         let ttsReq = try req.content.syncDecode(TTSRequest.self)
         
         let keyHash = hashFrom(ttsReq)
+        
+
+        if(Environment.get("BYPASS_CACHED") == "true"){
+            let ttsProvider = TTSProviderFactory.getTTSProvider(ttsReq)
+
+            return try ttsProvider.speech(ttsReq, req).flatMap { audio in
+                
+                return try AudioProcessingService().process(req: req, audioB64: audio, ffmpegFilters: ttsProvider.ffmpegFilterString).flatMap({(audioB64) -> EventLoopFuture<VoiceResponse> in
+                        
+                    return req.future(VoiceResponse(data: audioB64, cached: false))
+                })
+            }
+        }
         
         return req.withNewConnection(to: .redis) { redis in
             return redis.get(keyHash, as: String.self)
@@ -17,7 +32,11 @@ final class SpeechController {
                     let ttsProvider = TTSProviderFactory.getTTSProvider(ttsReq)
                     
                     return try ttsProvider.speech(ttsReq, req).flatMap { audio in
-                        return redis.set(keyHash, to: audio).transform(to: VoiceResponse(data: audio, cached: false))
+                        
+                        return try AudioProcessingService().process(req: req, audioB64: audio, ffmpegFilters: ttsProvider.ffmpegFilterString).flatMap({(audioB64) -> EventLoopFuture<VoiceResponse> in
+                            
+                            return redis.set(keyHash, to: audioB64).transform(to: VoiceResponse(data: audioB64, cached: false))
+                        })
                     }
                 })
         }
@@ -25,7 +44,7 @@ final class SpeechController {
     
     private func hashFrom(_ ttsReq: TTSRequest) -> String {
         let effectsProfile = ttsReq.audioConfig.effectsProfileId.joined()
-        var combined = ttsReq.input.ssml+ttsReq.voice.name+ttsReq.voice.languageCode+effectsProfile+ttsReq.audioConfig.audioEncoding
+        let combined = ttsReq.input.ssml+ttsReq.voice.name+ttsReq.voice.languageCode+effectsProfile+ttsReq.audioConfig.audioEncoding
         return String(combined.hashValue)
     }
 }

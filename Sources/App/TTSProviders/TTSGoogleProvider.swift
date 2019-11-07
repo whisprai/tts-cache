@@ -11,9 +11,11 @@ import Redis
 
 class TTSGoogleProvider: TTSProviderProtocol {
     
+    var ffmpegFilterString: String?
+    
     let ttsAPIUrl = "https://texttospeech.googleapis.com/v1beta1/text:synthesize"
     let headers = HTTPHeaders([
-        ("X-Goog-Api-Key", "AIzaSyC0vELi8Rl_92yiwCRum7Lhfj88hifzCNw"),
+        ("X-Goog-Api-Key", Environment.get("GOOGLE_API_KEY")!),
         ("Content-Type", "application/json; charset=utf-8")
     ])
     
