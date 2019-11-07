@@ -22,7 +22,7 @@ CMD add-apt-repository ppa:jonathonf/ffmpeg-4 -y
 RUN apt-get -qq update && apt-get install -y \
   libicu55 libxml2 libbsd0 libcurl3 libatomic1 \
   tzdata \
-   ffmpeg \
+  ffmpeg \
   && rm -r /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=builder /build/bin/Run .
