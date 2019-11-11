@@ -11,7 +11,6 @@ class AudioProcessingService {
     
     
     static var ffmpegPath: String? = Environment.get("FFMPEG_PATH")
-    static var outputFormat: String = Environment.get("OUTPUT_FORMAT") ?? "mp3"
     
     init(){
         
@@ -41,25 +40,25 @@ class AudioProcessingService {
         return bcf.string(fromByteCount: Int64(data.count))
     }
        
-    func process(req: Request, audioB64: String, ffmpegFilters: String?) throws -> Future<String> {
+    func process(req: Request, audioB64: String, ffmpegFilters: String?, outputFormat: String = "mp3") throws -> Future<String> {
         let data = Data(base64Encoded: audioB64)!
         
-        return try process(req: req, audio: data, ffmpegFilters: ffmpegFilters).flatMap({(data) -> EventLoopFuture<String> in
+        return try process(req: req, audio: data, ffmpegFilters: ffmpegFilters, outputFormat: outputFormat).flatMap({(data) -> EventLoopFuture<String> in
                        
             let base64 = data.base64EncodedString()
             return req.future(base64)
         })
     }
     
-    func process(req: Request, audio: Data, ffmpegFilters: String?) throws -> Future<Data> {
-
+    func process(req: Request, audio: Data, ffmpegFilters: String?, outputFormat: String = "mp3") throws -> Future<Data> {
+        
         let fm = FileManager.default
            
         let initTimer = Timer()
         
         let id = UUID().uuidString
         let tmpPath = "/tmp/\(id).mp3"
-        let outPath = "/tmp/\(id)_out.\(AudioProcessingService.outputFormat)"
+        let outPath = "/tmp/\(id)_out.\(outputFormat)"
         
         fm.createFile(atPath: tmpPath, contents: audio)
         

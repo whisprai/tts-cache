@@ -17,7 +17,9 @@ final class SpeechController {
 
             return try ttsProvider.speech(ttsReq, req).flatMap { audio in
                 
-                return try AudioProcessingService().process(req: req, audioB64: audio, ffmpegFilters: ttsProvider.ffmpegFilterString).flatMap({(audioB64) -> EventLoopFuture<VoiceResponse> in
+                let outputFormat = ttsReq.audioConfig.audioEncoding.lowercased()
+                
+                return try AudioProcessingService().process(req: req, audioB64: audio, ffmpegFilters: ttsProvider.ffmpegFilterString, outputFormat: outputFormat).flatMap({(audioB64) -> EventLoopFuture<VoiceResponse> in
                         
                     return req.future(VoiceResponse(data: audioB64, cached: false))
                 })
