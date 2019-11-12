@@ -17,8 +17,13 @@ RUN swift build -c release && mv `swift build -c release --show-bin-path` /build
 FROM ubuntu:16.04
 ARG env
 
-CMD add-apt-repository ppa:jonathonf/ffmpeg-4 -y
-RUN apt-get -qq update && apt-get install -y \
+
+RUN apt-get -qq update \
+  && apt-get -q -y install \
+  software-properties-common \
+  && add-apt-repository ppa:jonathonf/ffmpeg-4 -y \
+  && apt-get -qq update \
+  && apt-get install -y \
   libicu55 libxml2 libbsd0 libcurl3 libatomic1 \
   tzdata \
   ffmpeg \
