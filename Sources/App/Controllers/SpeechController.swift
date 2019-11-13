@@ -17,9 +17,9 @@ final class SpeechController {
 
             return try ttsProvider.speech(ttsReq, req).flatMap { audio in
                 
-                let outputFormat = ttsReq.audioConfig.audioEncoding.lowercased()
+                let fileExtension = try AudioProcessingService.AudioExtension(audioEncoding: ttsReq.audioConfig.audioEncoding.uppercased())
                 
-                return try AudioProcessingService().process(req: req, audioB64: audio, ffmpegFilters: ttsProvider.ffmpegFilterString, outputFormat: outputFormat).flatMap({(audioB64) -> EventLoopFuture<VoiceResponse> in
+                return try AudioProcessingService().process(req: req, audioB64: audio, ffmpegFilters: ttsProvider.ffmpegFilterString, fileExtension: fileExtension).flatMap({(audioB64) -> EventLoopFuture<VoiceResponse> in
                         
                     return req.future(VoiceResponse(data: audioB64, cached: false))
                 })
@@ -35,7 +35,9 @@ final class SpeechController {
                     
                     return try ttsProvider.speech(ttsReq, req).flatMap { audio in
                         
-                        return try AudioProcessingService().process(req: req, audioB64: audio, ffmpegFilters: ttsProvider.ffmpegFilterString).flatMap({(audioB64) -> EventLoopFuture<VoiceResponse> in
+                        let fileExtension = try AudioProcessingService.AudioExtension(audioEncoding: ttsReq.audioConfig.audioEncoding.uppercased())
+                        
+                        return try AudioProcessingService().process(req: req, audioB64: audio, ffmpegFilters: ttsProvider.ffmpegFilterString, fileExtension: fileExtension).flatMap({(audioB64) -> EventLoopFuture<VoiceResponse> in
                             
                             return redis.set(keyHash, to: audioB64).transform(to: VoiceResponse(data: audioB64, cached: false))
                         })

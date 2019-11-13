@@ -30,8 +30,10 @@ class TTSIBMProvider: TTSProviderProtocol {
         
         let authValue = "Basic \(auth_b64)"
         
+        let audioExt = try AudioProcessingService.AudioExtension(audioEncoding: ttsRequest.audioConfig.audioEncoding)
+        
         let headers = HTTPHeaders([
-            ("Accept", "audio/mp3"),
+            ("Accept", audioExt.getAcceptHeader()),
             ("Content-Type", "application/json; charset=utf-8"),
             ("Authorization", authValue)
         ])

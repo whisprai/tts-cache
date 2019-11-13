@@ -9,10 +9,41 @@ import Foundation
 
 class AudioProcessingService {
     
+    //https://cloud.ibm.com/apidocs/text-to-speech/text-to-speech?code=swift#synthesize-audio
+    //https://cloud.google.com/text-to-speech/docs/reference/rest/v1beta1/text/synthesize#AudioEncoding
+    enum AudioExtension : String {
+        case wav
+        case mp3
+        case ogg
+        
+        init(audioEncoding:String) throws {
+            switch audioEncoding {
+            case "LINEAR16":
+                self = .wav
+            case "MP3":
+                self = .mp3
+            case "OGG_OPUS":
+                self = .ogg
+            default:
+                throw Abort(.badRequest, reason:"extension not found for \(audioEncoding)")
+            }
+        }
+        
+        func getAcceptHeader() -> String {
+            return "audio/\(self.rawValue)"
+        }
+    }
     
     static var ffmpegPath: String? = Environment.get("FFMPEG_PATH")
     
     init(){
+        
+        if(Environment.get("FFMPEG_FILTERS") == "true"){
+            let task = Process()
+            task.launchPath = AudioProcessingService.ffmpegPath!
+            task.arguments = ["-filters"]
+            task.launch()
+        }
         
         if(AudioProcessingService.ffmpegPath == nil){
             do {
@@ -40,25 +71,24 @@ class AudioProcessingService {
         return bcf.string(fromByteCount: Int64(data.count))
     }
        
-    func process(req: Request, audioB64: String, ffmpegFilters: String?, outputFormat: String = "mp3") throws -> Future<String> {
+    func process(req: Request, audioB64: String, ffmpegFilters: String?, fileExtension: AudioExtension = .mp3) throws -> Future<String> {
         let data = Data(base64Encoded: audioB64)!
-        
-        return try process(req: req, audio: data, ffmpegFilters: ffmpegFilters, outputFormat: outputFormat).flatMap({(data) -> EventLoopFuture<String> in
+        return try process(req: req, audio: data, ffmpegFilters: ffmpegFilters, fileExtension: fileExtension).flatMap({(data) -> EventLoopFuture<String> in
                        
             let base64 = data.base64EncodedString()
             return req.future(base64)
         })
     }
     
-    func process(req: Request, audio: Data, ffmpegFilters: String?, outputFormat: String = "mp3") throws -> Future<Data> {
+    func process(req: Request, audio: Data, ffmpegFilters: String?, fileExtension: AudioExtension = .mp3) throws -> Future<Data> {
         
         let fm = FileManager.default
            
         let initTimer = Timer()
         
         let id = UUID().uuidString
-        let tmpPath = "/tmp/\(id).mp3"
-        let outPath = "/tmp/\(id)_out.\(outputFormat)"
+        let tmpPath = "/tmp/\(id).adat"
+        let outPath = "/tmp/\(id)_out.\(fileExtension.rawValue)"
         
         fm.createFile(atPath: tmpPath, contents: audio)
         
@@ -109,3 +139,4 @@ class AudioProcessingService {
         return promise.futureResult
     }
 }
+
