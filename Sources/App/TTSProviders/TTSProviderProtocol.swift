@@ -14,7 +14,9 @@ protocol TTSProviderProtocol {
     
     var defaultVoices: [String: String] {get}
     
-    func speech(_ ttsRequest: TTSRequest, _ req: Request, client: Vapor.Client) throws -> Future<String>
+    func speech(_ ttsRequest: TTSRequest, _ req: Request) throws -> Future<String>
     func getTTSRequestWithDefaults(ttsRequest: TTSRequest) throws -> TTSRequest
     func getFallbackProvider() -> TTSProviderProtocol
 }
+
+struct MissingApi : Error {}

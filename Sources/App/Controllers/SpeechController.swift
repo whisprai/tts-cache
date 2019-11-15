@@ -18,15 +18,18 @@ final class SpeechController {
         } catch {
             let fallbackProvider = TTSProviderFactory.getTTSProvider(ttsReq).getFallbackProvider()
             ttsReq = try fallbackProvider.getTTSRequestWithDefaults(ttsRequest: ttsReq)
-            return try getAudio(req, ttsReq: ttsReq, ttsProvider: fallbackProvider)
+            return try getAudio(req, ttsReq: ttsReq, fallbackProvider: fallbackProvider)
         }
     }
     
-    func getAudio (_ req: Request, ttsReq: TTSRequest, ttsProvider: TTSProviderProtocol? = nil) throws -> Future<VoiceResponse> {
+    func getAudio (_ req: Request, ttsReq: TTSRequest, fallbackProvider: TTSProviderProtocol? = nil) throws -> Future<VoiceResponse> {
         
         if(httpClient == nil){
             httpClient = try req.client()
         }
+        
+        //let usingFallbackProvider = fallbackProvider != nil
+        let ttsProvider = fallbackProvider ?? TTSProviderFactory.getTTSProvider(ttsReq)
         
         if(Environment.get("BYPASS_CACHED") == "true"){
             return try fetchAudio(req, ttsReq: ttsReq, ttsProvider: ttsProvider, client: httpClient!).flatMap { (audioB64) -> EventLoopFuture<VoiceResponse> in
@@ -49,9 +52,7 @@ final class SpeechController {
         }
     }
     
-    func fetchAudio(_ req: Request, ttsReq: TTSRequest, ttsProvider: TTSProviderProtocol? = nil, client: Vapor.Client) throws -> Future<String> {
-        
-        let ttsProvider = ttsProvider ?? TTSProviderFactory.getTTSProvider(ttsReq)
+    func fetchAudio(_ req: Request, ttsReq: TTSRequest, ttsProvider: TTSProviderProtocol, client: Vapor.Client) throws -> Future<String> {
         
         return try ttsProvider.speech(ttsReq, req).flatMap { audio in
         

@@ -114,7 +114,7 @@ class AudioProcessingService {
         
         task.terminationHandler = { (process) in
             
-            let newData = fm.contents(atPath: outPath)!
+            let newData = fm.contents(atPath: outPath)
             
             do {
                 try fm.removeItem(atPath: tmpPath)
@@ -132,11 +132,11 @@ class AudioProcessingService {
                 initTimer.display("FFmpeg")
                 
                 let size = self.getDataSize(audio)
-                let procData = self.getDataSize(newData)
+                let procData = self.getDataSize(newData!)
                 print("Audio size: \(size) -> \(procData)")
             }
             
-            promise.succeed(result: newData)
+            promise.succeed(result: newData!)
         }
         
         task.launch()
@@ -145,3 +145,4 @@ class AudioProcessingService {
     }
 }
 
+struct InvalidData : Error { }
