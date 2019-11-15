@@ -25,7 +25,7 @@ class TTSGoogleProvider: TTSProviderProtocol {
         ("Content-Type", "application/json; charset=utf-8")
     ])
     
-    func speech(_ ttsRequest: TTSRequest, _ req: Request) throws -> Future<String> {
+    func speech(_ ttsRequest: TTSRequest, _ req: Request, client: Vapor.Client) throws -> Future<String> {
        
         let json = try JSONEncoder().encode(ttsRequest)
         
@@ -35,7 +35,7 @@ class TTSGoogleProvider: TTSProviderProtocol {
         newHttp.body = HTTPBody(data: json)
         let newRequest = Request(http: newHttp, using: req.sharedContainer)
         
-        let googleAPIRequest = try req.client().send(newRequest)
+        let googleAPIRequest = client.send(newRequest)
             .flatMap({ (googleResponse) -> (Future<[String : String]>) in
             try googleResponse.content.decode([String : String].self)
         })

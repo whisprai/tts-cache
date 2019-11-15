@@ -130,8 +130,6 @@ class AudioProcessingService {
             
             guard newData != nil else { return promise.fail(error: InvalidData()) }
             
-            print("Audio count size: \(newData!.count)")
-            
             let validDataSize = 256
             guard newData!.count > validDataSize else { return promise.fail(error: InvalidData()) }
 

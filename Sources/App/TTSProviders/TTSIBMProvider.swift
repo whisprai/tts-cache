@@ -26,7 +26,7 @@ class TTSIBMProvider: TTSProviderProtocol {
         return "https://stream.watsonplatform.net/text-to-speech/api/v1/synthesize?voice=\(voiceName)"
     }
     
-    func speech(_ ttsRequest: TTSRequest, _ req: Request) throws -> Future<String> {
+    func speech(_ ttsRequest: TTSRequest, _ req: Request, client: Vapor.Client) throws -> Future<String> {
         
         // overriding voice name, ttsRequest.voice.name
         let url = getApiUrl(voiceName: defaultVoices[ttsRequest.voice.languageCode] ?? "es-ES_EnriqueV3Voice")
@@ -55,7 +55,7 @@ class TTSIBMProvider: TTSProviderProtocol {
         
         let newRequest = Request(http: newHttp, using: req.sharedContainer)
         
-        return try req.client().send(newRequest)
+        return client.send(newRequest)
             .flatMap({ (response) -> (Future<String>) in
                 
                 if(response.http.status.code != 200) {
