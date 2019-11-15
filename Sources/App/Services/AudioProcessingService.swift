@@ -114,29 +114,43 @@ class AudioProcessingService {
         
         task.terminationHandler = { (process) in
             
-            let newData = fm.contents(atPath: outPath)!
+            let newData = fm.contents(atPath: outPath)
             
             do {
                 try fm.removeItem(atPath: tmpPath)
-                try fm.removeItem(atPath: outPath)
             } catch {
-                print("Error removing tmp files!")
+                print("Error removing tmp file!")
             }
             
+            do {
+                try fm.removeItem(atPath: outPath)
+            } catch {
+                print("Error removing tmp output file!")
+            }
+            
+            guard newData != nil else { return promise.fail(error: InvalidData()) }
+            
+            print("Audio count size: \(newData!.count)")
+            
+            let validDataSize = 256
+            guard newData!.count > validDataSize else { return promise.fail(error: InvalidData()) }
+
             if(Environment.get("FFMPEG_LOG") == "true"){
                 initTimer.display("FFmpeg")
                 
                 let size = self.getDataSize(audio)
-                let procData = self.getDataSize(newData)
+                let procData = self.getDataSize(newData!)
                 print("Audio size: \(size) -> \(procData)")
             }
             
-            promise.succeed(result: newData)
+            promise.succeed(result: newData!)
         }
         
         task.launch()
         
         return promise.futureResult
     }
+    
+    struct InvalidData : Error {}
 }
 
