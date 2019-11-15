@@ -52,9 +52,10 @@ final class SpeechController {
     func fetchAudio(_ req: Request, ttsReq: TTSRequest, ttsProvider: TTSProviderProtocol? = nil, client: Vapor.Client) throws -> Future<String> {
         
         let ttsProvider = ttsProvider ?? TTSProviderFactory.getTTSProvider(ttsReq)
-        let fileExtension = try AudioProcessingService.AudioExtension(audioEncoding: ttsReq.audioConfig.audioEncoding.uppercased())
         
-        return try ttsProvider.speech(ttsReq, req, client: client).flatMap { audio in
+        return try ttsProvider.speech(ttsReq, req).flatMap { audio in
+        
+            let fileExtension = try AudioProcessingService.AudioExtension(audioEncoding: ttsReq.audioConfig.audioEncoding.uppercased())
             
             return try AudioProcessingService().process(req: req, audioB64: audio, ffmpegFilters: ttsProvider.ffmpegFilterString, fileExtension: fileExtension)
         }
@@ -65,8 +66,6 @@ final class SpeechController {
         let combined = ttsReq.input.ssml+ttsReq.voice.name+ttsReq.voice.languageCode+effectsProfile+ttsReq.audioConfig.audioEncoding
         return String(combined.hashValue)
     }
-    
-    struct WrongEncoding : Error {}
 }
 
 struct VoiceResponse : Content {
