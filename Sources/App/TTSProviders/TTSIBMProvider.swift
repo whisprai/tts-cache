@@ -14,6 +14,11 @@ class TTSIBMProvider: TTSProviderProtocol {
     var ffmpegFilterString: String? = "acompressor=ratio=6:attack=0.03:release=25:threshold=-19dB:knee=6dB:makeup=8dB:mix=1:detection=peak,equalizer=f=2000:g=3.85dB:w=1.14,equalizer=f=700:g=7dB:w=0.7"
     
     let defaultVoice = "es-ES_EnriqueV3Voice"
+
+    let defaultVoices = [
+        "en-US":"en-US_MichaelV3Voice",
+        "es": "es-ES_EnriqueV3Voice"
+    ]
     
     let apiKey = Environment.get("IBM_API_KEY")!
     
@@ -23,7 +28,8 @@ class TTSIBMProvider: TTSProviderProtocol {
     
     func speech(_ ttsRequest: TTSRequest, _ req: Request) throws -> Future<String> {
         
-        let url = getApiUrl(voiceName: defaultVoice) //ttsRequest.voice.name
+        // overriding voice name, ttsRequest.voice.name
+        let url = getApiUrl(voiceName: defaultVoices[ttsRequest.voice.languageCode] ?? "es-ES_EnriqueV3Voice")
         
         let authData = ("apiKey:\(apiKey)").data(using: String.Encoding.utf8)
         let auth_b64 = authData!.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
@@ -45,8 +51,7 @@ class TTSIBMProvider: TTSProviderProtocol {
         
         let body = ReqBody(text: ttsRequest.input.ssml)
         let jsonData = try JSONEncoder().encode(body)
-        let jsonString = String(data: jsonData, encoding: .utf8)!
-        newHttp.body = HTTPBody(string: jsonString)
+        newHttp.body = HTTPBody(data: jsonData)
         
         let newRequest = Request(http: newHttp, using: req.sharedContainer)
         
@@ -63,6 +68,16 @@ class TTSIBMProvider: TTSProviderProtocol {
                 let base64 = data!.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
                 return req.future( base64 )
         })
+    }
+    
+    func getTTSRequestWithDefaults(ttsRequest: TTSRequest) throws -> TTSRequest {
+        var newTTSReq = ttsRequest;
+        newTTSReq.voice.name = defaultVoices[ttsRequest.voice.languageCode]!
+        return newTTSReq
+    }
+    
+    func  getFallbackProvider() -> TTSProviderProtocol {
+        return TTSGoogleProvider()
     }
     
     struct ReqBody: Codable {

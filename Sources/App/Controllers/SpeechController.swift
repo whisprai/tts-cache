@@ -5,44 +5,53 @@ let BYPASS_CACHED = true
 
 final class SpeechController {
     
+    struct TestError : Error { }
    
     func speech(_ req: Request) throws -> Future<VoiceResponse> {
-        let ttsReq = try req.content.syncDecode(TTSRequest.self)
         
-        let keyHash = hashFrom(ttsReq)
+        var ttsReq = try req.content.syncDecode(TTSRequest.self)
         
-
+        do {
+            return try getAudio(req, ttsReq: ttsReq)
+        } catch {
+            let fallbackProvider = TTSProviderFactory.getTTSProvider(ttsReq).getFallbackProvider()
+            ttsReq = try fallbackProvider.getTTSRequestWithDefaults(ttsRequest: ttsReq)
+            return try getAudio(req, ttsReq: ttsReq, ttsProvider: fallbackProvider)
+        }
+    }
+    
+    func getAudio (_ req: Request, ttsReq: TTSRequest, ttsProvider: TTSProviderProtocol? = nil) throws -> Future<VoiceResponse> {
+        
         if(Environment.get("BYPASS_CACHED") == "true"){
-            let ttsProvider = TTSProviderFactory.getTTSProvider(ttsReq)
-
-            return try ttsProvider.speech(ttsReq, req).flatMap { audio in
-                
-                let fileExtension = try AudioProcessingService.AudioExtension(audioEncoding: ttsReq.audioConfig.audioEncoding.uppercased())
-                
-                return try AudioProcessingService().process(req: req, audioB64: audio, ffmpegFilters: ttsProvider.ffmpegFilterString, fileExtension: fileExtension).flatMap({(audioB64) -> EventLoopFuture<VoiceResponse> in
-                        
-                    return req.future(VoiceResponse(data: audioB64, cached: false))
-                })
+            return try fetchAudio(req, ttsReq: ttsReq, ttsProvider: ttsProvider).flatMap { (audioB64) -> EventLoopFuture<VoiceResponse> in
+                return req.future(VoiceResponse(data: audioB64, cached: false))
             }
         }
+        
+        let keyHash = hashFrom(ttsReq)
         
         return req.withNewConnection(to: .redis) { redis in
             return redis.get(keyHash, as: String.self)
                 .flatMap({(cached) -> EventLoopFuture<VoiceResponse> in
                     if let cachedData = cached { return req.eventLoop.newSucceededFuture(result: VoiceResponse(data: cachedData, cached: true)) }
                     
-                    let ttsProvider = TTSProviderFactory.getTTSProvider(ttsReq)
-                    
-                    return try ttsProvider.speech(ttsReq, req).flatMap { audio in
+                    return try self.fetchAudio(req, ttsReq: ttsReq, ttsProvider: ttsProvider).flatMap { (audioB64) -> EventLoopFuture<VoiceResponse> in
                         
-                        let fileExtension = try AudioProcessingService.AudioExtension(audioEncoding: ttsReq.audioConfig.audioEncoding.uppercased())
-                        
-                        return try AudioProcessingService().process(req: req, audioB64: audio, ffmpegFilters: ttsProvider.ffmpegFilterString, fileExtension: fileExtension).flatMap({(audioB64) -> EventLoopFuture<VoiceResponse> in
-                            
-                            return redis.set(keyHash, to: audioB64).transform(to: VoiceResponse(data: audioB64, cached: false))
-                        })
+                        return redis.set(keyHash, to: audioB64).transform(to: VoiceResponse(data: audioB64, cached: false))
                     }
                 })
+        }
+    }
+    
+    func fetchAudio(_ req: Request, ttsReq: TTSRequest, ttsProvider: TTSProviderProtocol? = nil) throws -> Future<String> {
+        
+        let ttsProvider = ttsProvider ?? TTSProviderFactory.getTTSProvider(ttsReq)
+        
+        return try ttsProvider.speech(ttsReq, req).flatMap { audio in
+        
+            let fileExtension = try AudioProcessingService.AudioExtension(audioEncoding: ttsReq.audioConfig.audioEncoding.uppercased())
+            
+            return try AudioProcessingService().process(req: req, audioB64: audio, ffmpegFilters: ttsProvider.ffmpegFilterString, fileExtension: fileExtension)
         }
     }
     
@@ -63,15 +72,15 @@ struct TTSResponse : Content {
     let cached:Bool
 }
 
-struct TTSRequest : Content {
-    let voice: TTSRequestVoice
+struct TTSRequest : Content, Codable {
+    var voice: TTSRequestVoice
     let audioConfig: TTSRequestAudio
     let input: TTSRequestInput
 }
 
 struct TTSRequestVoice : Content {
-    let name: String
-    let languageCode: String
+    var name: String
+    var languageCode: String
 }
 
 struct TTSRequestAudio :  Content {

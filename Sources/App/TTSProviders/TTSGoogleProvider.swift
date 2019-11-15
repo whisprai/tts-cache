@@ -10,8 +10,14 @@ import Vapor
 import Redis
 
 class TTSGoogleProvider: TTSProviderProtocol {
-    
+
     var ffmpegFilterString: String?
+    
+    var defaultVoices = [
+        "en-US":"en-US-Wavenet-D",
+        "da":"da-DK-Wavenet-A",
+        "es":"es-ES-Standard-A"
+    ]
     
     let ttsAPIUrl = "https://texttospeech.googleapis.com/v1beta1/text:synthesize"
     let headers = HTTPHeaders([
@@ -21,9 +27,12 @@ class TTSGoogleProvider: TTSProviderProtocol {
     
     func speech(_ ttsRequest: TTSRequest, _ req: Request) throws -> Future<String> {
        
+        let json = try JSONEncoder().encode(ttsRequest)
+        
         var newHttp = req.http
         newHttp.url = URL(string:ttsAPIUrl)!
         newHttp.headers = headers
+        newHttp.body = HTTPBody(data: json)
         let newRequest = Request(http: newHttp, using: req.sharedContainer)
         
         let googleAPIRequest = try req.client().send(newRequest)
@@ -35,5 +44,15 @@ class TTSGoogleProvider: TTSProviderProtocol {
             guard let response = jsonData["audioContent"] else { throw Abort(.badRequest, reason: "No audio received")}
             return req.future( response )
         }
+    }
+    
+    func getTTSRequestWithDefaults(ttsRequest: TTSRequest) throws -> TTSRequest {
+        var newTTSReq = ttsRequest;
+        newTTSReq.voice.name = defaultVoices[ttsRequest.voice.languageCode]!
+        return newTTSReq
+    }
+    
+    func getFallbackProvider() -> TTSProviderProtocol {
+        return TTSIBMProvider()
     }
 }
