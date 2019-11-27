@@ -1,3 +1,16 @@
+# Commands:
+
+# https://kubernetes.io/docs/tutorials/stateless-application/expose-external-ip-address/
+
+# docker build -t tts -f web.Dockerfile --build-arg env="production" ./
+# docker run --rm -it -p 80:80 -e FFMPEG_LOG="true" -e BYPASS_CACHED="true" -e FFMPEG_PATH="/usr/bin/ffmpeg" -e IBM_API_KEY="ndHUMUN-WDu872AfMmVa_vcQDidclpqQRUgi3rk-KZpu" -e GOOGLE_API_KEY="AIzaSyC0vELi8Rl_92yiwCRum7Lhfj88hifzCNw" tts
+
+# docker build -t eu.gcr.io/whisprpoc-212608/tts-cache -f web.Dockerfile --build-arg env="production" ./
+# OR
+# docker tag tts eu.gcr.io/whisprpoc-212608/tts-cache
+
+# docker push eu.gcr.io/whisprpoc-212608/tts-cache
+
 # You can set the Swift version to what you need for your app. Versions can be found here: https://hub.docker.com/_/swift
 FROM swift:4.2 as builder
 

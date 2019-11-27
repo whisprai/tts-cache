@@ -35,7 +35,7 @@ class TTSIBMProvider: TTSProviderProtocol {
         
         let authValue = "Basic \(auth_b64)"
         
-        let audioExt = try AudioProcessingService.AudioExtension(audioEncoding: ttsRequest.audioConfig.audioEncoding)
+        let audioExt = try AudioExtension(audioEncoding: ProviderUtils.getFetchEncoding())
         
         let headers = HTTPHeaders([
             ("Accept", audioExt.getAcceptHeader()),
@@ -59,7 +59,7 @@ class TTSIBMProvider: TTSProviderProtocol {
                 
                 if(response.http.status.code != 200) {
                     let code = Int(response.http.status.code)
-                    let reason = String(data: response.http.body.data!, encoding: String.Encoding.utf8);
+                    let reason = response.http.body.data != nil ? String(data: response.http.body.data!, encoding: String.Encoding.utf8) : ""
                     throw Abort(HTTPResponseStatus(statusCode: code), reason: reason)
                 }
 

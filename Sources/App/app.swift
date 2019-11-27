@@ -10,3 +10,20 @@ public func app(_ env: Environment) throws -> Application {
     try boot(app)
     return app
 }
+
+/*
+ Env:
+ IBM_API_KEY
+ GOOGLE_API_KEY
+ 
+ REDIS_HOSTNAME
+ REDIS_DATABASE
+ REDIS_PORT
+ REDIS_AUTH
+ 
+ FFMPEG_PATH
+ 
+ ENCODE_BITRATE: 32k
+ AUDIO_FETCH_ENCODING: LINEAR16
+
+ */

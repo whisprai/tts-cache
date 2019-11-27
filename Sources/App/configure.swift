@@ -33,10 +33,15 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
         print(env)
         let hostname = Environment.get("REDIS_HOSTNAME") ?? ""
         let database = Environment.get("REDIS_DATABASE") ?? ""
+        let port = Environment.get("REDIS_PORT") ?? "6379"
         
-        let redisUrlString = "redis://\(hostname):6379/\(database)"
+        let envAuth = Environment.get("REDIS_AUTH")
+        let auth = (envAuth != nil ? "\(envAuth!)@" : "")
+        
+        let redisUrlString = "redis://\(auth)\(hostname):\(port)/\(database)"
         guard let redisUrl = URL(string: redisUrlString) else { throw Abort(.internalServerError) }
         let redisClientConfig = RedisClientConfig(url: redisUrl)
+
         
         services.register(redisClientConfig, as: RedisClientConfig.self)
     }
