@@ -9,31 +9,6 @@ import Foundation
 
 class AudioProcessingService {
     
-    //https://cloud.ibm.com/apidocs/text-to-speech/text-to-speech?code=swift#synthesize-audio
-    //https://cloud.google.com/text-to-speech/docs/reference/rest/v1beta1/text/synthesize#AudioEncoding
-    enum AudioExtension : String {
-        case wav
-        case mp3
-        case ogg
-        
-        init(audioEncoding:String) throws {
-            switch audioEncoding {
-            case "LINEAR16":
-                self = .wav
-            case "MP3":
-                self = .mp3
-            case "OGG_OPUS":
-                self = .ogg
-            default:
-                throw Abort(.badRequest, reason:"extension not found for \(audioEncoding)")
-            }
-        }
-        
-        func getAcceptHeader() -> String {
-            return "audio/\(self.rawValue)"
-        }
-    }
-    
     static var ffmpegPath: String? = Environment.get("FFMPEG_PATH")
     
     init(){
@@ -57,7 +32,7 @@ class AudioProcessingService {
     //For macOS
     func getFFmpegPath() throws -> String {
         
-        let ffmpegLibPath = "\(Environment.get("LIB_PATH")!)/ffmpeg"
+        let ffmpegLibPath = "\(String(describing: Environment.get("LIB_PATH")))/ffmpeg"
 
         let versions = try FileManager.default.contentsOfDirectory(atPath: ffmpegLibPath)
         
@@ -93,23 +68,28 @@ class AudioProcessingService {
         fm.createFile(atPath: tmpPath, contents: audio)
         
         let addedAf = "\((ffmpegFilters != nil) ? "," : "")\(ffmpegFilters ?? "")"
-        //let ffmpegAf = "silenceremove=start_periods=1:start_threshold=-60dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-60dB:detection=peak,areverse\(addedAf)"
+
         let ffmpegAf = "silenceremove=start_periods=1:start_threshold=-55dB,areverse,silenceremove=start_periods=1:start_threshold=-55dB,areverse\(addedAf)"
+        
+        let bitrate = Environment.get("ENCODE_BITRATE") ?? "32k"
         
         let args = [
                     "-nostdin",
                     "-i", "\(tmpPath)",
                     "-af", ffmpegAf,
+                    "-b:a", bitrate,
                     "-y",
                     "-hide_banner",
                     "-loglevel", Environment.get("FFMPEG_LOG") == "true" ? "info" : "panic",
                     "\(outPath)"
                     ]
         
+        guard AudioProcessingService.ffmpegPath != nil else { throw MissingFFMPEG() }
+        
         let promise = req.eventLoop.newPromise(Data.self)
         
         let task = Process()
-        task.launchPath = AudioProcessingService.ffmpegPath!
+        task.launchPath = AudioProcessingService.ffmpegPath
         task.arguments = args
         
         task.terminationHandler = { (process) in
@@ -145,4 +125,5 @@ class AudioProcessingService {
     }
 }
 
+struct MissingFFMPEG : Error {}
 struct InvalidData : Error { }

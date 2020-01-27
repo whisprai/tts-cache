@@ -23,8 +23,12 @@ class TTSGoogleProvider: TTSProviderProtocol {
     
     
     func speech(_ ttsRequest: TTSRequest, _ req: Request) throws -> Future<String> {
-       
-        let json = try JSONEncoder().encode(ttsRequest)
+        
+        let googleTtsReq = TTSRequest(voice: ttsRequest.voice,
+                                      audioConfig: TTSRequestAudio(effectsProfileId: ["medium-bluetooth-speaker-class-device"], audioEncoding: ProviderUtils.getFetchEncoding()),
+                                      input: ttsRequest.input)
+        
+        let json = try JSONEncoder().encode(googleTtsReq)
         
         guard let apiKey = Environment.get("GOOGLE_API_KEY") else { throw MissingApi() }
         let headers = HTTPHeaders([

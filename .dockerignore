@@ -3,4 +3,5 @@
 DerivedData
 Package.resolved
 *.xcodeproj
-
+.swiftpm
+.circleci
