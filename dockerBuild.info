@@ -1,0 +1,2 @@
+docker build -t eu.gcr.io/whisprpoc-212608/tts-cache --build-arg env="production" .
+gcloud builds submit --tag eu.gcr.io/whisprpoc-212608/tts-cache
